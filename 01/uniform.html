@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>uniform</title>
+  <script src="../lib/index.js"></script>
+  <style>
+    #canvas{
+      background: gray;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="400">
+  此浏览器不支持canvas
+</canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const gl = ctx.getContext('webgl')
+  // 创建着色器源码
+  const VERTEX_SHADER_SOURCE = `
+    attribute vec4 aPosition;
+    void main() {
+      gl_Position = aPosition;
+      gl_PointSize = 30.0;
+    }
+  `; // 顶点着色器
+
+  const FRAGMENT_SHADER_SOURCE = `
+    // 在片元着色器中没有默认的浮点数精度设置，在使用之前一定要先设置精度
+    precision mediump float;
+    uniform vec2 uColor;
+    void main() {
+      gl_FragColor = vec4(uColor.r, uColor.g, 0.0,1.0); // vec4
+    }
+  `; // 片元着色器
+
+  const program = initShader(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
+  const aPosition = gl.getAttribLocation(program, 'aPosition');
+  const uColor = gl.getUniformLocation(program, 'uColor')
+
+  gl.uniform2f(uColor, 1.0, 0.0)
+  // 如果是绘制一组点就要用 数组存储
+  const points = []
+  // 改成 ctx.onmousemove 看看效果呢 😄
+  ctx.onclick = function(ev) {
+    // 当前点击的点坐标信息
+    const x = ev.clientX;
+    const y = ev.clientY;
+
+    // 获取点的 top 和 left 距离
+    const { left, top } = ev.target.getBoundingClientRect();
+
+    // 点距离 canvas 画布的距离
+    const domX = x - left;
+    const domY = y - top;
+
+    // canvas 画布的中心位置
+    const halfWidth = ctx.offsetWidth / 2
+    const halfHeight = ctx.offsetHeight / 2
+
+    // 点在 WebGL 中的坐标位置 
+    const clickX = (domX - halfWidth) / halfWidth
+    const clickY = (halfHeight - domY) / halfHeight
+
+    // 根据鼠标点击位置绘制一个点
+    // gl.vertexAttrib2f(aPosition, clickX, clickY)
+    // gl.drawArrays(gl.POINTS, 0, 1);
+
+    // 绘制每次点击的点
+    points.push({
+      clickX, clickY
+    })
+
+    for (let i = 0; i < points.length; i++) {
+      gl.vertexAttrib2f(aPosition, points[i].clickX, points[i].clickY);
+    //   gl.uniform4f(uColor, points[i].clickX, points[i].clickY, 0.0, 1.0);
+      gl.drawArrays(gl.POINTS, 0, 1);
+    }
+  }
+
+</script>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画布入门</title>
+    <style>
+        #canvas {
+            background: #bbb;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="600">
+        此浏览器不支持 canvas
+    </canvas>
+</body>
+</html>
+
+<script>
+    // 获取 canvas 元素
+    const dom = document.getElementById('canvas');
+    // 获取绘图上下文
+    const ctx = dom.getContext('2d');
+    // 图形颜色
+    ctx.fillStyle = 'pink';
+    // 绘制矩形，起点是 10，10， 宽200,高100
+    ctx.fillRect(10,10,200,100)
+</script>

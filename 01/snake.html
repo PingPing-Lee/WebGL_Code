@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>snake</title>
+  <script src="../lib/index.js"></script>
+  <style>
+    #canvas{
+      background: gray;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="400">
+  此浏览器不支持canvas
+</canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const gl = ctx.getContext('webgl')
+  // 创建着色器源码
+  const VERTEX_SHADER_SOURCE = `
+    attribute vec4 aPosition;
+    void main() {
+      gl_Position = aPosition;
+      gl_PointSize = 20.0;
+    }
+  `; // 顶点着色器
+
+  const FRAGMENT_SHADER_SOURCE = `
+    void main() {
+      gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    }
+  `; // 片元着色器
+
+  const program = initShader(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
+  const aPosition = gl.getAttribLocation(program, 'aPosition');
+
+  // 食物点
+  const random = {
+    isConnect: true
+  }
+  // 移动的点，即蛇身的长度
+  let points = [
+    {x: 0, y: 0},
+  ]
+  // 移动的速度
+    let originSpeed = 0.03;
+
+  // 行动的速度
+  let speed = originSpeed;
+
+  // 移动的方向
+  let direction = 'x';
+
+  // 允许吃掉食物的误差范围
+  let base = 2;
+
+  // 创建 随机点
+  function createRandomPoint () {
+    // 创建移动的点
+    if(random.isConnect) {
+        random.x = Math.random() * 2 - 1;
+        random.y = Math.random() * 2 - 1;
+        random.isConnect = false;
+        console.log(random)
+    }
+    gl.vertexAttrib3f(aPosition, random.x, random.y, 0.0);
+    gl.drawArrays(gl.POINTS, 0, 1);
+  }
+
+  // 创建移动的点
+  function createMovePoint() {
+    let prex = 0;
+    let prey = 0;
+    for(let i = 0; i < points.length; i++) {
+        // points[i][direction] += speed;
+        if (i === 0) {
+            prex = points[0].x
+            prey = points[0].y
+            points[0][direction] += speed;
+        } else {
+            let {x, y} = points[i]
+            points[i].x = prex
+            points[i].y = prey
+
+            prex = x;
+            prey = y;
+        }
+
+        gl.vertexAttrib3f(aPosition,  points[i].x, points[i].y, 0.0)
+        gl.drawArrays(gl.POINTS, 0, 1);
+    }
+  }
+
+  let timer = null
+
+  // 绘制食物店
+  function draw() {
+    timer = setInterval(() => {
+        // 边界判断
+        if (
+            points[0].x > 1.0 ||
+            points[0].x < -1.0 ||
+            points[0].y < -1.0 ||
+            points[0].y > 1.0
+        ) {
+            alert('游戏结束');
+            restart();
+        }
+
+        if (
+            points[0].x > random.x - base * originSpeed &&
+            points[0].x < random.x + base * originSpeed &&
+            points[0].y < random.y + base * originSpeed &&
+            points[0].y > random.y - base * originSpeed
+        ) {
+            points.push({ x: random.x, y: random.y })
+            random.isConnect = true;
+        }
+        createRandomPoint();
+        createMovePoint();
+    }, 200)
+  }
+  draw();
+
+  document.onkeydown = (event) => {
+    switch (event.keyCode) {
+      case 37:
+        direction = 'x';
+        speed = -originSpeed
+        break;
+      case 38:
+        direction = 'y';
+        speed = originSpeed;
+        break;
+      case 39:
+        direction = 'x';
+        speed = originSpeed;
+        break;
+      case 40:
+        direction = 'y';
+        speed = -originSpeed;
+        break;
+    }
+  }
+
+  function restart() {
+    clearInterval(timer)
+    points = [
+      {x: 0, y: 0}
+    ]
+    direction = 'x'
+    speed = originSpeed
+    draw();
+  }
+</script>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制一个点</title>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400">
+        此浏览器不支持 canvas
+    </canvas>
+</body>
+</html>
+
+<script>
+    // 获取 canvas 元素
+    const dom = document.getElementById('canvas');
+    // 获取绘图上下文
+    const gl = dom.getContext('webgl');
+
+    // 创建顶点着色器源码
+    const VERTEX_SHADER_SOURCE = `
+        // main 是入口函数，必须要存在的
+        void main() {
+            // 要绘制的点的坐标，x y z w齐次坐标(x/w, y/w, z/w)
+            gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+            // 要绘制的点的大小
+            // 这需要注意 gl_PointSize 是浮点型
+            gl_PointSize = 30.0;
+        }
+    `;
+    // 创建片元着色器源码
+    const FRAGMENT_SHADER_SOURCE = `
+        void main() {
+            // 要绘制的点的颜色
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    `;
+
+    // 创建着色器
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+
+    // 指定着色器源码
+    gl.shaderSource(vertexShader, VERTEX_SHADER_SOURCE);
+    gl.shaderSource(fragmentShader, FRAGMENT_SHADER_SOURCE);
+
+    // 编译着色器
+    gl.compileShader(vertexShader);
+    gl.compileShader(fragmentShader);
+
+    // 创建一个程序对象
+    // 关联 js 和 webgl
+    const program = gl.createProgram();
+
+    // 给程序对象指定所使用的着色器
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+
+    // 关联 js 和 webgl
+    gl.linkProgram(program);
+
+    // 使用 program
+    gl.useProgram(program);
+
+    // 执行绘制
+    // 要绘制的图形是是什么，从哪个开始，使用几个顶点
+    gl.drawArrays(gl.POINTS, 0, 1)
+</script>
