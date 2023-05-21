@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>复合动画</title>
+  <script src="../lib/index.js"></script>
+  <style>
+    #canvas{
+      background: gray;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="400">
+  此浏览器不支持canvas
+</canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const gl = ctx.getContext('webgl')
+  // 创建着色器源码
+  const VERTEX_SHADER_SOURCE = `
+    // 必须要存在 main 函数
+    attribute vec4 aPosition;
+    // 使用 uniform 来声明变量，因为uniform 数据针对所有顶点生效，平移的事图形的所有顶点数据 而不是一个
+    uniform mat4 mat;
+    void main() {
+      // 要绘制的点的坐标
+      gl_Position = mat * aPosition;
+      // 点的大小
+      gl_PointSize = 30.0;
+    }
+  `; // 顶点着色器
+
+  const FRAGMENT_SHADER_SOURCE = `
+    void main() {
+      gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    }
+  `; // 片元着色器
+
+  const program = initShader(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
+  const aPosition = gl.getAttribLocation(program, 'aPosition');
+  const mat = gl.getUniformLocation(program, 'mat');
+
+
+
+  // 创建顶点数据
+  const points = new Float32Array([
+    -0.5, -0.5,
+    0.5, -0.5,
+    0.0, 0.5,
+  ])
+  //   创建缓存区对象
+  const buffer = gl.createBuffer();
+
+  //   将创建的缓冲区对象 buffer 绑定到 webGL中
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  //   将顶点数据写入到缓冲区对象里】
+  gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW)
+
+  //   将缓冲区对象分配给一个 attribute 变量
+  gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0)
+  // 开启 attribute 变量
+  gl.enableVertexAttribArray(aPosition)
+  let translateX = -1;
+  let deg = 0;
+  let scaleX = 1;
+  function animation() {
+    translateX += 0.01;
+    deg += 0.01;
+    scaleX += 0.01;
+    if(translateX > 1) {
+        translateX = -1;
+    }
+    if(scaleX > 2) {
+        scaleX = 1;
+    }
+    const translate = getTranslateMatrix(translateX);
+    const scale = getScaleMatrix(scaleX);
+    const rotate = getRotateMatrix(deg);
+    const matrix = mixMatrix(mixMatrix(translate, scale), rotate);
+    gl.uniformMatrix4fv(mat, false, matrix);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    requestAnimationFrame(animation)
+  }
+  animation();
+</script>

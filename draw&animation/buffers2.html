@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>多缓冲区和数据偏移</title>
+  <script src="../lib/index.js"></script>
+  <style>
+    #canvas{
+      background: gray;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="400">
+  此浏览器不支持canvas
+</canvas>
+</body>
+</html>
+<script>
+  const ctx = document.getElementById('canvas')
+  const gl = ctx.getContext('webgl')
+  // 创建着色器源码
+  const VERTEX_SHADER_SOURCE = `
+    attribute vec4 aPosition;
+    attribute float aPositionSize;
+    void main() {
+      gl_Position = aPosition;
+      gl_PointSize = aPositionSize;
+    }
+  `; // 顶点着色器
+
+  const FRAGMENT_SHADER_SOURCE = `
+    void main() {
+      gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    }
+  `; // 片元着色器
+
+  const program = initShader(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
+  const aPosition = gl.getAttribLocation(program, 'aPosition');
+  const aPositionSize = gl.getAttribLocation(program, 'aPositionSize');
+
+  // 创建顶点数据
+  const points = new Float32Array([
+    -0.5, -0.5, 10.0,
+    0.5, -0.5, 20.0,
+    0.0, 0.5, 30.0,
+  ])
+  //   创建缓存区对象
+  const buffer = gl.createBuffer();
+  //   将创建的缓冲区对象 buffer 绑定到 webGL中
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  //   将顶点数据写入到缓冲区对象里】
+  gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW)
+
+  const BYTES = points.BYTES_PER_ELEMENT;
+    //   将缓冲区对象分配给一个 attribute 变量
+    gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, BYTES * 3, 0)
+    // 开启 attribute 变量
+    gl.enableVertexAttribArray(aPosition)
+
+    //   将缓冲区对象分配给一个 attribute 变量
+    gl.vertexAttribPointer(aPositionSize, 1, gl.FLOAT, false,  BYTES * 3, BYTES * 2)
+    // 开启 attribute 变量
+    gl.enableVertexAttribArray(aPositionSize)
+  gl.drawArrays(gl.POINTS, 0, 3);
+</script>
